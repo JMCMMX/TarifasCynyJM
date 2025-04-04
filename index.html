@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Tarifas de Hotel Actualizada</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .calculator {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 600px; /* Aumentado un poco el ancho */
+            margin: 20px auto; /* Centrar la calculadora */
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select,
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Para incluir padding y border en el ancho total */
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #totalRate {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            text-align: center;
+        }
+        #totalRate span {
+             color: #0056b3;
+        }
+        .error {
+            color: #dc3545;
+            font-size: 0.9em;
+            margin-top: 5px;
+            min-height: 1.2em; /* Para evitar saltos de layout */
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator">
+    <h2>Calculadora de Tarifas</h2>
+    <p style="font-size: 0.9em; color: #555;">Seleccione habitación, número de personas y días para estimar la tarifa.</p>
+    <form id="rateForm">
+        <div class="form-group">
+            <label for="roomType">Tipo de Habitación:</label>
+            <select id="roomType" name="roomType" required>
+                <option value="" disabled selected>-- Seleccione una habitación --</option>
+                </select>
+        </div>
+
+        <div class="form-group">
+            <label for="numPeople">Número de Personas:</label>
+            <select id="numPeople" name="numPeople" required>
+                <option value="" disabled selected>-- Seleccione número --</option>
+                <option value="1">1 Persona</option>
+                <option value="2">2 Personas</option>
+                <option value="3">3 Personas</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="numDays">Número de Noches:</label>
+            <input type="number" id="numDays" name="numDays" min="1" required placeholder="Ingrese el número de noches">
+        </div>
+
+         <div id="errorMessages" class="error"></div> <button type="button" onclick="calculateRate()">Calcular Tarifa Total</button>
+
+        <div id="totalRate" style="display: none;">
+            Tarifa Total Estimada: <span id="calculatedAmount">$0.00</span>
+            <div id="rateDetails" style="font-size: 0.8em; font-weight: normal; margin-top: 5px; color: #333;"></div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // --- Datos de Tarifas ---
+    // Estructura: "id": { nombre_mostrado: "Nombre", single: Tarifa Sencilla, double_pp: Tarifa Doble por Persona, extra: Tarifa Extra 3ra Persona }
+    const ratesData = {
+        "mexico-swim-up-garden": { nombre_mostrado: "(Xcaret México) Swim-up Garden", single: 12900.00, double_pp: 10409.70, extra: 7800.00 },
+        "mexico-swim-up-ocean-front-adults": { nombre_mostrado: "(Xcaret México) Swim Up Ocean Front Adults", single: 17040.00, double_pp: 13748.70, extra: 10320.00 },
+        "mexico-suite-river-spa-adults": { nombre_mostrado: "(Xcaret México) Suite River SPA Adults", single: 11660.00, double_pp: 9401.70, extra: 7060.00 }, // Corregido 'Rover' a 'River'
+        "mexico-suite-river-adults": { nombre_mostrado: "(Xcaret México) Suite River Adults", single: 14320.00, double_pp: 11543.70, extra: 8660.00 },
+        "mexico-suite-ocean-front-family": { nombre_mostrado: "(Xcaret México) Suite Ocean Front Family", single: 15480.00, double_pp: 12488.70, extra: 9360.00 }, // Asegúrate que el 9360,00 es correcto
+        "mexico-suite-garden": { nombre_mostrado: "(Xcaret México) Suite Garden", single: 10020.00, double_pp: 8078.70, extra: 6060.00 },
+        "mexico-suite-river-jump": { nombre_mostrado: "(Xcaret México) Suite River Jump", single: 13540.00, double_pp: 10913.70, extra: 8180.00 },
+        "mexico-suite-river-jump-adults": { nombre_mostrado: "(Xcaret México) Suite River Jump Adults", single: 14940.00, double_pp: 12047.70, extra: 9040.00 },
+        "mexico-suite-river": { nombre_mostrado: "(Xcaret México) Suite River", single: 10560.00, double_pp: 8519.70, extra: 6380.00 },
+        "mexico-suite-ocean-view": { nombre_mostrado: "(Xcaret México) Suite Ocean View", single: 12200.00, double_pp: 9842.70, extra: 7380.00 },
+        "mexico-suite-ocean-front-adults": { nombre_mostrado: "(Xcaret México) Suite Ocean Front Adults", single: 16260.00, double_pp: 13118.70, extra: 9840.00 },
+        "mexico-suite-garden-spa-adults": { nombre_mostrado: "(Xcaret México) Suite Garden SPA Adults", single: 11120.00, double_pp: 8960.70, extra: 6720.00 },
+        "mexico-presidencial-adults-suite": { nombre_mostrado: "(Xcaret México) Presidencial Adults Suite", single: 33460.00, double_pp: 26978.70, extra: 20240.00 }, // Corregido 'Presidenoal'
+        "mexico-presidencial-family-suite": { nombre_mostrado: "(Xcaret México) Presidencial Family Suite", single: 30320.00, double_pp: 24458.70, extra: 18340.00 }, // Corregido 'Presdennal'
+        "mexico-junior-suite-fuego-adults": { nombre_mostrado: "(Xcaret México) Junior Suite Fuego Adults", single: 18620.00, double_pp: 15008.70, extra: 11260.00 },
+        "mexico-junior-suite-spa-adults": { nombre_mostrado: "(Xcaret México) Junior Suite SPA Adults", single: 18220.00, double_pp: 14693.70, extra: 11020.00 },
+        "mexico-junior-suite": { nombre_mostrado: "(Xcaret México) Junior Suite", single: 18220.00, double_pp: 14693.70, extra: 11020.00 },
+        "mexico-family-master-suite": { nombre_mostrado: "(Xcaret México) Family Master Suite", single: 22520.00, double_pp: 18158.70, extra: 13620.00 },
+        "arte-swim-up-ocean-front-adults": { nombre_mostrado: "(Xcaret Arte) Swim up Ocean Front Adults", single: 31080.00, double_pp: 15535.20, extra: 11660.00 },
+        "arte-swim-up-ocean-front": { nombre_mostrado: "(Xcaret Arte) Swim Up Ocean Front", single: 29640.00, double_pp: 14815.20, extra: 11120.00 },
+        "arte-swim-up-garden": { nombre_mostrado: "(Xcaret Arte) Swim up Garden", single: 22140.00, double_pp: 11071.20, extra: 8300.00 },
+        "arte-suite-river-spa": { nombre_mostrado: "(Xcaret Arte) Suite River SPA", single: 21140.00, double_pp: 10567.20, extra: 7920.00 },
+        "arte-suite-river-jump-adults": { nombre_mostrado: "(Xcaret Arte) Suite River Jump Adults", single: 26460.00, double_pp: 13231.20, extra: 9920.00 },
+        "arte-suite-river-jump": { nombre_mostrado: "(Xcaret Arte) Suite River Jump", single: 23300.00, double_pp: 11647.20, extra: 8740.00 },
+        "arte-suite-river-adults": { nombre_mostrado: "(Xcaret Arte) Suite River Adults", single: 25880.00, double_pp: 12943.20, extra: 9700.00 },
+        "arte-suite-river": { nombre_mostrado: "(Xcaret Arte) Suite River", single: 19120.00, double_pp: 9559.20, extra: 7160.00 },
+        "arte-suite-ocean-view": { nombre_mostrado: "(Xcaret Arte) Suite Ocean View", single: 24740.00, double_pp: 12367.20, extra: 9280.00 },
+        "arte-suite-ocean-front-adults": { nombre_mostrado: "(Xcaret Arte) Suite Ocean Front Adults", single: 28620.00, double_pp: 14311.20, extra: 10740.00 },
+        "arte-suite-ocean-front": { nombre_mostrado: "(Xcaret Arte) Suite Ocean Front", single: 27480.00, double_pp: 13735.20, extra: 10300.00 },
+        "arte-suite-garden-spa": { nombre_mostrado: "(Xcaret Arte) Suite Garden SPA", single: 20120.00, double_pp: 10063.20, extra: 7540.00 },
+        "arte-suite-garden": { nombre_mostrado: "(Xcaret Arte) Suite Garden", single: 18120.00, double_pp: 9055.00, extra: 6800.00 },
+        "arte-master-suite-ocean-view": { nombre_mostrado: "(Xcaret Arte) Master Suite Ocean View", single: 40860.00, double_pp: 20431.20, extra: 15320.00 },
+        "arte-master-suite-ocean-front": { nombre_mostrado: "(Xcaret Arte) Master Suite Ocean Front", single: 43740.00, double_pp: 21871.20, extra: 16400.00 },
+        "arte-master-river": { nombre_mostrado: "(Xcaret Arte) Master River", single: 37980.00, double_pp: 18991.20, extra: 14240.00 },
+        "arte-junior-suite-river-spa": { nombre_mostrado: "(Xcaret Arte) Junior Suite River SPA", single: 33380.00, double_pp: 16687.20, extra: 12520.00 },
+        "arte-junior-suite-ocean-view": { nombre_mostrado: "(Xcaret Arte) Junior Suite Ocean View", single: 33380.00, double_pp: 16687.20, extra: 12520.00 },
+        "arte-junior-suite-ocean-front-adults": { nombre_mostrado: "(Xcaret Arte) Junior Suite Ocean Front Adults", single: 35100.00, double_pp: 17551.20, extra: 13160.00 }
+    };
+    // --- Fin de la sección de datos ---
+
+    // Función para limpiar números (quitar '$' y ',')
+    function cleanNumber(value) {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+            // Remover '$' y ',' , luego convertir a número flotante
+            const cleaned = value.replace(/[$,]/g, '');
+            return parseFloat(cleaned);
+        }
+        return NaN; // Not a Number si no es ni string ni number
+    }
+
+
+    // Función para poblar el dropdown de habitaciones al cargar la página
+    function populateRoomOptions() {
+        const roomSelect = document.getElementById('roomType');
+        // Limpiar opciones existentes (excepto la primera 'disabled')
+        while (roomSelect.options.length > 1) {
+            roomSelect.remove(1);
+        }
+
+        // Obtener las claves (IDs) y ordenarlas alfabéticamente por nombre mostrado
+        const sortedKeys = Object.keys(ratesData).sort((a, b) => {
+            const nameA = ratesData[a].nombre_mostrado.toLowerCase();
+            const nameB = ratesData[b].nombre_mostrado.toLowerCase();
+            if (nameA < nameB) return -1;
+            if (nameA > nameB) return 1;
+            return 0;
+        });
+
+        // Agregar opciones ordenadas desde ratesData
+        sortedKeys.forEach(key => {
+             const option = document.createElement('option');
+             option.value = key; // El identificador único como valor
+             option.textContent = ratesData[key].nombre_mostrado; // El nombre legible para mostrar
+             roomSelect.appendChild(option);
+        });
+    }
+
+
+    function calculateRate() {
+        const roomTypeKey = document.getElementById('roomType').value;
+        const numPeople = parseInt(document.getElementById('numPeople').value); // Convertir a entero
+        const numDaysInput = document.getElementById('numDays');
+        const numDays = parseInt(numDaysInput.value); // Convertir a número entero
+        const totalRateDiv = document.getElementById('totalRate');
+        const calculatedAmountSpan = document.getElementById('calculatedAmount');
+        const rateDetailsDiv = document.getElementById('rateDetails');
+        const errorDiv = document.getElementById('errorMessages');
+
+        // Limpiar errores previos y ocultar resultado
+        errorDiv.textContent = '';
+        totalRateDiv.style.display = 'none';
+        rateDetailsDiv.textContent = '';
+
+
+        // --- Validaciones ---
+        let errors = [];
+        if (!roomTypeKey) {
+            errors.push("Seleccione un tipo de habitación.");
+        }
+        if (isNaN(numPeople)) { // Chequear si es NaN después de parseInt
+            errors.push("Seleccione el número de personas.");
+        }
+        if (!numDays || numDays <= 0 || !Number.isInteger(numDays)) {
+             errors.push("Ingrese un número válido de noches (mayor que 0).");
+             numDaysInput.value = ''; // Limpiar si es inválido
+        }
+
+        // Si hay errores, mostrarlos y detener cálculo
+        if (errors.length > 0) {
+            errorDiv.textContent = errors.join(' ');
+            return;
+        }
+
+        // --- Cálculo ---
+        const roomData = ratesData[roomTypeKey];
+
+        if (!roomData) {
+            errorDiv.textContent = "Error: Datos de la habitación no encontrados.";
+            return;
+        }
+
+        let nightlyRate = 0;
+        let rateDescription = '';
+
+        // Limpiar y validar tarifas de la habitación seleccionada
+        const singleRate = cleanNumber(roomData.single);
+        const doublePpRate = cleanNumber(roomData.double_pp);
+        const extraRate = cleanNumber(roomData.extra);
+
+        if (numPeople === 1) {
+            if (isNaN(singleRate)) {
+                 errorDiv.textContent = `Error: Tarifa sencilla no definida o inválida para esta habitación.`;
+                 return;
+            }
+            nightlyRate = singleRate;
+            rateDescription = `Tarifa por noche (1p): ${nightlyRate.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`;
+        } else if (numPeople === 2) {
+             if (isNaN(doublePpRate)) {
+                 errorDiv.textContent = `Error: Tarifa doble (pp) no definida o inválida para esta habitación.`;
+                 return;
+             }
+            nightlyRate = doublePpRate * 2;
+             rateDescription = `Tarifa por noche (2p: ${doublePpRate.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} pp x 2): ${nightlyRate.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`;
+        } else if (numPeople === 3) {
+             if (isNaN(doublePpRate) || isNaN(extraRate)) {
+                 errorDiv.textContent = `Error: Tarifa doble (pp) o extra no definida/inválida para cálculo de 3 personas.`;
+                 return;
+             }
+            nightlyRate = (doublePpRate * 2) + extraRate;
+             rateDescription = `Tarifa por noche (3p: Base 2p ${ (doublePpRate*2).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} + Extra ${extraRate.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}): ${nightlyRate.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`;
+        } else {
+             errorDiv.textContent = `Error: Número de personas (${numPeople}) no soportado.`;
+             return;
+        }
+
+
+        if (isNaN(nightlyRate)) {
+             errorDiv.textContent = `Error: No se pudo calcular la tarifa por noche. Verifique los datos de la habitación.`;
+             return;
+        }
+
+        const total = nightlyRate * numDays;
+
+        // Mostrar el resultado formateado como moneda (Pesos Mexicanos)
+        calculatedAmountSpan.textContent = total.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+        rateDetailsDiv.textContent = `${rateDescription} x ${numDays} noche(s)`;
+        totalRateDiv.style.display = 'block'; // Mostrar el div del resultado
+    }
+
+     // Poblar las opciones de habitación cuando la página se cargue
+    document.addEventListener('DOMContentLoaded', populateRoomOptions);
+
+</script>
+
+</body>
+</html>
