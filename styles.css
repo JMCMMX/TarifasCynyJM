@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Tarifas - Boda Cynthia & Jose Miguel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Estilos Base --- */
+        body {
+            font-family: 'Lato', sans-serif; /* Fuente principal */
+            line-height: 1.6;
+            margin: 0; /* Quitar margen por defecto */
+            padding: 20px; /* Añadir padding alrededor */
+            background-color: #fdfaf6; /* Crema muy suave */
+            color: #4a4a4a; /* Gris oscuro suave */
+        }
+
+        /* --- Estilos Calculadora (Tema Boda) --- */
+        .calculator {
+            background-color: #ffffff; /* Blanco */
+            padding: 35px 40px; /* Más padding interno */
+            border-radius: 12px; /* Bordes más redondeados */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Sombra más suave */
+            max-width: 600px;
+            margin: 40px auto; /* Más margen superior/inferior */
+            border: 1px solid #eee; /* Borde muy sutil */
+            text-align: center; /* Centrar contenido del contenedor */
+        }
+
+        .calculator h2 {
+            font-family: 'Playfair Display', serif; /* Fuente elegante para el título */
+            color: #8B7355; /* Tono marrón/dorado oscuro */
+            font-size: 2.2em; /* Tamaño más grande */
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .calculator p {
+            font-size: 1em; /* Tamaño adecuado */
+            color: #6c6c6c; /* Gris medio */
+            margin-bottom: 30px; /* Más espacio debajo del párrafo */
+            max-width: 90%; /* Evitar que sea demasiado ancho */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px; /* Más espacio entre grupos */
+            text-align: left; /* Alinear etiquetas e inputs a la izquierda */
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px; /* Espacio entre label e input */
+            font-weight: 700; /* Negrita */
+            color: #5a5a5a;
+            font-size: 0.95em;
+        }
+
+        select,
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 15px; /* Padding más generoso */
+            border: 1px solid #ddd; /* Borde más claro */
+            border-radius: 8px; /* Bordes redondeados */
+            box-sizing: border-box;
+            font-family: 'Lato', sans-serif; /* Asegurar fuente */
+            font-size: 1em;
+            background-color: #fdfdfd; /* Fondo ligeramente diferente */
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #c5a47e; /* Color dorado suave al enfocar */
+            box-shadow: 0 0 0 2px rgba(197, 164, 126, 0.2); /* Resplandor suave */
+        }
+
+        button {
+            background-color: #c5a47e; /* Dorado suave */
+            color: white;
+            padding: 14px 25px; /* Padding generoso */
+            border: none;
+            border-radius: 8px; /* Bordes redondeados */
+            cursor: pointer;
+            font-size: 1.1em; /* Ligeramente más grande */
+            font-weight: 700; /* Negrita */
+            font-family: 'Lato', sans-serif;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: 15px; /* Espacio arriba */
+            display: inline-block; /* Para que respete el text-align center del contenedor */
+            width: auto; /* Ancho automático
